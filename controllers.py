@@ -70,6 +70,7 @@ def basic_evaluation_fn(env,controller,abs_value=True,clamp_diff=3,melax_factor=
         return -0.51*agg_height+0.76*env.cleared_lines_per_move-0.36*holes-0.18*bumpiness if abs_value else (agg_height,env.cleared_lines_per_move,holes,bumpiness)
 
     elif controller=='dellacherie':
+        print(env.landing_height, env.cleared_lines_per_move,row_trans)
         estimated_evaluation= -0.5*env.landing_height+500*(env.cleared_lines_per_move)**2-0.5*row_trans\
             -0.5*col_trans-2*holes-0.5*wells
         return estimated_evaluation if abs_value else (row_trans,col_trans,holes,wells) # The reason that landing height and cleared lines are not returned,

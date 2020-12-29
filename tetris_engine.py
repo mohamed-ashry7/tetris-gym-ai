@@ -13,7 +13,7 @@ from utils.tetris_engine_utils import *
 
 class TetrisEngine:
 
-    def __init__(self, width, height ,grouped_actions=True,
+    def __init__(self, width, height ,
     state_calculator='schwenker2008',eval_fn='dellacherie', penalty =-100,
     clamp_diff=3,melax_factor=2):
     
@@ -23,7 +23,6 @@ class TetrisEngine:
         self.eval_fn = eval_fn
         self.melax_factor = melax_factor
         self.clamp_diff = clamp_diff
-        self.grouped_actions = grouped_actions
         self.penalty = penalty
         self.board = np.zeros(shape=(width, height), dtype=np.float)
 
@@ -199,10 +198,10 @@ class TetrisEngine:
         #5: rotate_right,
         #6: idle,
         
-        if self.grouped_actions:
-            self._exec_grouped_actions(action)
-        else:
-            self._exec_normal_action(action)
+        # if self.grouped_actions:
+        self._exec_grouped_actions(action)
+        # else:
+        #     self._exec_normal_action(action)
         # Update time and reward
         self.time += 1
         reward=0
@@ -274,6 +273,13 @@ class TetrisEngine:
         return basic_evaluation_fn(self,self.eval_fn,melax_factor=self.melax_factor,clamp_diff=self.clamp_diff)
         
                 
+# if __name__=="__main__":
+#     engine = TetrisEngine(10,20)
+#     done = False 
+#     while not done: 
+#         _,_,done=engine.step(1)
+#         print(engine)
+
 
 
 
