@@ -3,7 +3,7 @@
 
 
 # This File is Originally taken from https://github.com/jaybutera/tetrisRL. 
-# There are some modification to this environment to be fine with the model chosen.
+# There are major modification to this environment to be fine with the model chosen.
 
 import numpy as np
 import random
@@ -13,9 +13,18 @@ from utils.tetris_engine_utils import *
 
 class TetrisEngine:
 
-    def __init__(self, width, height):
+    def __init__(self, width, height ,grouped_actions=True,
+    state_calculator='schwenker2008',eval_fn='dellacherie', penalty =-100,
+    clamp_diff=3,melax_factor=2):
+    
         self.width = int(width)
         self.height = int(height)
+        self.state_calculator = state_calculator
+        self.eval_fn = eval_fn
+        self.melax_factor = melax_factor
+        self.clamp_diff = clamp_diff
+        self.grouped_actions = grouped_actions
+        self.penalty = penalty
         self.board = np.zeros(shape=(width, height), dtype=np.float)
 
         # actions are triggered by letters
@@ -157,7 +166,7 @@ class TetrisEngine:
     def calc_state(self):
         
 
-        state=basic_evaluation_fn(self,'schwenker2008',melax_factor=4)
+        state=basic_evaluation_fn(self,self.state_calculator,abs_value=False,melax_factor=self.melax_factor,clamp_diff=self.clamp_diff)
         state=np.append(state,self.piece_number)
         
         return state
@@ -173,16 +182,31 @@ class TetrisEngine:
         self.prev_state_evaluation=state_evaluation
         return reward
     
-    
+    def _exec_normal_action(self,action):
+        self.anchor = (int(self.anchor[0]), int(self.anchor[1]))
+        self.shape, self.anchor = self.value_action_map[action](self.shape, self.anchor, self.board)
+        self.shape, self.anchor = soft_drop(self.shape, self.anchor, self.board)
+
+
     def step(self, action):
         
+        #Basic Actions for normal actions but the groud are up tp 40 actions
+        #0: left,
+        #1: right,
+        #2: hard_drop,
+        #3: soft_drop,
+        #4: rotate_left,
+        #5: rotate_right,
+        #6: idle,
         
-       
-        self._exec_grouped_actions(action)
-        
+        if self.grouped_actions:
+            self._exec_grouped_actions(action)
+        else:
+            self._exec_normal_action(action)
         # Update time and reward
         self.time += 1
         reward=0
+
 
         done = False
         if self._has_dropped():
@@ -200,7 +224,7 @@ class TetrisEngine:
         #calcualte the Reward based on the Evaluation of the states. 
         
         
-        reward = -100 if done else self.calc_reward() 
+        reward = self.penalty if done else self.calc_reward() 
         self.total_reward+=reward
         return state, round(reward,3), done
 
@@ -209,7 +233,6 @@ class TetrisEngine:
         self.score = 0
         self._new_piece()
         self.board = np.zeros_like(self.board)
-        #Modification
         self.prev_state_evaluation=0
         self.landing_height=0
         self.cleared_lines=0
@@ -248,34 +271,10 @@ class TetrisEngine:
     
     def calc_state_evaluation(self):
         
-        return basic_evaluation_fn(self,'dellacherie')
+        return basic_evaluation_fn(self,self.eval_fn,melax_factor=self.melax_factor,clamp_diff=self.clamp_diff)
         
                 
 
 
-# if __name__ == '__main__':
-#     env = TetrisEngine(10,20)
-
-#     while True:
-#         print (env.calc_state())
-#         _,_,d=env.step(env.random_action())
-#         print(env)
-#         if d==True:
-#             break
-    # for a in range(40):
-    #     s,_,_=env.step(a)
-    #     print(env)
-    #     print(s)
-    #     env.clear()
-    # while True:
-    #     action =np.random.randint(0,40)
-    #     state , reward, done = env.step(action)
-    #     print(env)
-    #     print(f"Reward {reward} , state{state}, Action {action},Lines {env.cleared_lines}")
-    #     if done:
-    #         if env.cleared_lines>0:
-    #             break
-    #         else:
-    #             env.clear()
 
 
